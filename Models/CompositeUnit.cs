@@ -9,8 +9,10 @@ namespace OobConverter.Models {
         public CompositeUnit? ParentUnit { get; set; }
         public string? Nationality { get; set; }
 
+        public int Depth => ParentUnit == null ? 0 : ParentUnit.Depth + 1; 
+
         public override string ToString() {
-            return $"{Name};{DisplayNameRenderer.Get(FormationType)}";
+            return $"{DisplayNameRenderer.Get(FormationType)};{Name};{Nationality}";
         }
     }
 }

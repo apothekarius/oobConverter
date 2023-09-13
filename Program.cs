@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text;
+using System.Text.RegularExpressions;
 using OobConverter.Enums;
 using OobConverter.Models;
 
@@ -17,7 +18,7 @@ var allRawResults = new Dictionary<string, RawUnitData>();
 foreach (var file in allFiles) {
     try {
         Console.WriteLine($"Begin processing of {file}...");
-        using var reader = new StreamReader(file);
+        using var reader = new StreamReader(file, Encoding.UTF7);
         lineCounter = 0;
         var line = FindFirstLineOfUnits(reader);
 
@@ -47,18 +48,59 @@ foreach (var file in allFiles) {
 }
 
 foreach (var pair in allRawResults) {
-    var file = pair.Key.Substring(2, pair.Key.Length - 2 - 3);
+    var file = pair.Key.Substring(2, pair.Key.Length - 2 - 4);
     var raw = pair.Value;
     Console.WriteLine($"Creating output for {file}");
+    var rootConverted = ConvertToCompositeUnit(raw, null, out var maxDepthOfHierarchy);
 
-    var rootConverted = ConvertToCompositeUnit(raw, null);
-
+    using var writer = new StreamWriter(File.Create($"./{file}.csv"));
+    writer.WriteLine(Header(maxDepthOfHierarchy));
+    WriteRoot(rootConverted, maxDepthOfHierarchy, writer);
     Console.WriteLine($"Created {file}.csv");
 }
 
 Console.WriteLine("All done.");
+Console.ReadLine();
 
-CompositeUnit ConvertToCompositeUnit(RawUnitData data, CompositeUnit? parent) {
+string Header(int hierarchyDepth) {
+    var prefix = new List<string>();
+    for (var i = 1; i < hierarchyDepth; i++) {
+        prefix.Add($"Level {i}");
+    }
+
+    return $"{string.Join(';', prefix)};Formation Size;Name;Nationality;Description;Unit Type;Movement Type;No. Men/Vehicles/Guns;Quality;Hard Attack/Range;Soft Attack/Range;AA Attack/Range;Assault;Defense;Speed [km/h];Keywords";
+}
+
+void WriteRoot(CompositeUnit root, int hierarchyDepth, StreamWriter writer) {
+    var prefixes = new List<string>();
+    for (var i = 0; i < hierarchyDepth - 1; i++) {
+        prefixes.Add(string.Empty);
+    }
+
+    foreach (var sub in root.SubordinateComposites) {
+        WriteComposite(sub, prefixes, writer);
+    }
+}
+
+void WriteComposite(CompositeUnit unit, List<string> prefixes, StreamWriter writer) {
+    prefixes[unit.Depth - 1] = unit.Name;
+    writer.WriteLine($"{string.Join(';', prefixes)};{unit}");
+    foreach (var sub in unit.SubordinateElementaries ?? new List<ElementaryUnit>()) {
+        writer.WriteLine(WriteElementary(sub, prefixes));
+    }
+
+    foreach (var sub in unit.SubordinateComposites ?? new List<CompositeUnit>()) {
+        WriteComposite(sub, prefixes, writer);
+    }
+
+    prefixes[unit.Depth - 1] = string.Empty;
+}
+
+string WriteElementary(ElementaryUnit unit, List<string> prefixes) {
+    return $"{string.Join(';', prefixes)};{unit}";
+}
+
+CompositeUnit ConvertToCompositeUnit(RawUnitData data, CompositeUnit? parent, out int maxDepthOfHierarchy) {
     var splitDataString = SplitDataString(data.UnitData, !data.HasNationality);
 
     var result = new CompositeUnit();
@@ -74,16 +116,20 @@ CompositeUnit ConvertToCompositeUnit(RawUnitData data, CompositeUnit? parent) {
         result.Name = data.UnitData;
     }
 
-
+    maxDepthOfHierarchy = result.Depth;
     foreach (var sub in data.Subordinates?.Where(x => x.IsComposite) ?? Array.Empty<RawUnitData>()) {
         result.SubordinateComposites ??= new List<CompositeUnit>();
-        result.SubordinateComposites.Add(ConvertToCompositeUnit(sub, result));
+        result.SubordinateComposites.Add(ConvertToCompositeUnit(sub, result, out var depthOfHierarchy));
+        maxDepthOfHierarchy = Math.Max(depthOfHierarchy, maxDepthOfHierarchy);
     }
 
     foreach (var sub in data.Subordinates?.Where(x => x.IsElementary) ?? Array.Empty<RawUnitData>()) {
         result.SubordinateElementaries ??= new List<ElementaryUnit>();
         result.SubordinateElementaries.Add(ConvertToElementaryUnit(sub, result));
     }
+
+    if (result.SubordinateComposites == null)
+        maxDepthOfHierarchy = result.SubordinateElementaries.First().Depth;
 
     return result;
 }
@@ -112,6 +158,7 @@ ElementaryUnit ConvertToElementaryUnit(RawUnitData data, CompositeUnit parent) {
     var descAndName = string.Join(' ', splitDataString.Skip(20)).Split(',');
     result.Name = descAndName[0].Trim();
     result.Description = descAndName[1].Trim();
+
     return result;
 }
 

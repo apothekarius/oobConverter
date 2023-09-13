@@ -23,5 +23,11 @@ namespace OobConverter.Models
         public FormationType FormationType { get; set; }
         public CompositeUnit? ParentUnit { get; set; }
         public string? Nationality { get; set; }
+
+        public int Depth => ParentUnit.Depth + 1;
+
+        public override string ToString() {
+            return $"{DisplayNameRenderer.Get(FormationType)};{Name};{Nationality};{Description};{DisplayNameRenderer.Get(UnitType)};{DisplayNameRenderer.Get(MovementType)};{Amount};{Quality};{HardAttack}/{HardRange};{SoftAttack}/{SoftRange};{AntiAirAttack}/{AntiAirRange};{Assault};{Defense};{Speed};{Keywords}";
+        }
     }
 }

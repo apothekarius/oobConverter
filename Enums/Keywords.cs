@@ -1,16 +1,17 @@
-﻿namespace OobConverter.Enums {
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace OobConverter.Enums {
     [Flags]
     internal enum Keywords {
-        None = 0,
-        IndirectFire = 1,
-        Mines = 2,
-        SupplyDrop = 8, //spec
-        Bridge = 16,
-        Jet = 64,
-        ChemicalNuclear = 128,
-        NightFlying = 256,
-        ThermalImagingSights = 1024,
-        UnknownKeyword2048 = 2048,
-        LowReliability = 4096
+        [Display(Name = "")] None = 0,
+        [Display(Name = "IF")] IndirectFire = 1,
+        [Display(Name = "Mines")] Mines = 2,
+        [Display(Name = "Para")] Para = 8,
+        [Display(Name = "Bridge")] Bridge = 16,
+        [Display(Name = "Jet")] Jet = 64,
+        [Display(Name = "WMD")] ChemicalNuclear = 128,
+        [Display(Name = "Night Flying")] NightFlying = 256,
+        [Display(Name = "Thermal IS")] ThermalImagingSights = 1024,
+        [Display(Name = "Low Reliability")] LowReliability = 4096
     }
 }
