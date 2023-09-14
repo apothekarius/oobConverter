@@ -1,0 +1,16 @@
+ordnance.dat
+Name	
+Type (0 -> AtA, 1 -> AtS, 2 -> StA, 3 -> StS, 6 -> Fuel Tank, 9 -> SOJ, 10 -> Cyber, 5 -> Dispensing, 4 -> ECM, 8 -> Sensor) (Type 1 with keyword a, z, c, x, i is Cargo, Sensor auto flags r)
+Speed (mph)
+Range (mi)
+Angle (Degrees)
+Aspect (Degrees)
+Flags (1 -> *S, 2 -> *R, 4 -> *A, 8 -> *O, 16 -> *P, 32 -> *V, 64-> W, 128 -> L, 512 -> a, 1024 -> N, 2048 -> T, 4096 -> M, 8192 -> *G, 16384 -> ^N, 32768 -> E, 131072 -> ^U, 262144 -> ^H, 524288 -> *Y, 1048576 -> Q,
+Hit prob
+Explosive
+UK
+Delay (neg)
+No Earlier Than (Month)
+No Earlier Than (Year)
+No Later Than (Month)
+No Later Than (Year)
